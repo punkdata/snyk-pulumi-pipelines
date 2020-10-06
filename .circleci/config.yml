@@ -42,7 +42,7 @@ jobs:
           name: Build binary app and Docker image
           command: |
             echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV
-            echo 'export TAG=<< pipeline.number >>' $BASH_ENV
+            echo 'export TAG=${CIRCLE_SHA1}' $BASH_ENV
             echo 'export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME' >> $BASH_ENV && source $BASH_ENV
             pipenv install --skip-lock
             pipenv run pyinstaller -F hello_world.py
