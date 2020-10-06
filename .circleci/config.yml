@@ -86,7 +86,7 @@ workflows:
   build_test_deploy:
     jobs:
       - scan_app
-      - test_scan
+      - unit_tests
       - scan_push_docker_image
       - deploy_to_gcp:
           requires:
