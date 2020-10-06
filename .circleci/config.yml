@@ -71,6 +71,7 @@ jobs:
           name: Install dependencies
           command: |
             cd ~/
+            sudo pip install --upgrade six
             pip install --user -r project/requirements.txt
             curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
             tar -xzvf gcp-cli.tar.gz
