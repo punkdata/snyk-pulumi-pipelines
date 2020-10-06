@@ -23,7 +23,7 @@ if 'CIRCLE_SHA1' in os.environ:
 else:
     image_tag = 'latest'
 
-docker_image = 'ariv3ra/orb-snyk:{0}'.format(image_tag)
+docker_image = 'ariv3ra/snyk-pulumi-pipelines:{0}'.format(image_tag)
 
 machine_type = 'g1-small'
 

@@ -1,5 +1,5 @@
 flask
-pyinstall
+pyinstaller
 pytest
 pylint
 pulumi
