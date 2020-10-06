@@ -1,0 +1,3 @@
+name: orb-snyk
+runtime: python
+description: Deploys App to Google Cloud Platform GKE service

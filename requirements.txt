@@ -1,0 +1,7 @@
+flask
+pyinstall
+pytest
+pylint
+pulumi
+pulumi-gcp
+pulumi-kubernetes
