@@ -3,7 +3,7 @@ orbs:
   snyk: snyk/snyk@0.0.12
   pulumi: pulumi/pulumi@2.0.0  
 jobs:
-  test_scan:
+  unit_tests:
     docker:
       - image: circleci/python:3.7.4
     steps:
@@ -13,8 +13,6 @@ jobs:
           command: |
             echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV && source $BASH_ENV
             pipenv install --skip-lock
-      - snyk/scan:
-          monitor-on-build: true
       - run:
           name: Run Tests
           command: |
@@ -90,6 +88,6 @@ workflows:
       - scan_app
       - test_scan
       - scan_push_docker_image
-      # - deploy_to_gcp:
-      #     requires:
-      #       - scan_push_docker_image
+      - deploy_to_gcp:
+          requires:
+            - scan_push_docker_image
