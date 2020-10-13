@@ -96,7 +96,7 @@ jobs:
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
   alternative_testing:
     docker:
-      - image: circleci/node:12
+      - image: circleci/golang:1.15.2
         environment:
           CLOUDSDK_PYTHON: '/usr/bin/python2.7'
           GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
@@ -114,9 +114,10 @@ jobs:
             source $BASH_ENV
             gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
       - run:
-          name: Install Go
+          name: Install Node and NPM
           command: |
-            wget -q -O - https://git.io/vQhTU | bash
+            curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+            sudo apt -y install nodejs npm
       - run:
           name: Run Infra Tests
           command: |
