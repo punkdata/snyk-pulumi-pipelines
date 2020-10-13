@@ -91,6 +91,34 @@ jobs:
           property_name: appEndpointIp
           env_var: ENDPOINT_URL
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
+  alternative_testing:
+    docker:
+      - image: circleci/node:12
+        environment:
+          CLOUDSDK_PYTHON: '/usr/bin/python2.7'
+          GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            cd ~/
+            curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+            tar -xzf gcp-cli.tar.gz
+            echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            ./google-cloud-sdk/install.sh  --quiet
+            echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
+            source $BASH_ENV
+            gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+      - run:
+          name: Install Go
+          command: |
+            wget -q -O - https://git.io/vQhTU | bash
+      - run:
+          name: Run Infra Tests
+          command: |
+            cd ${HOME}/project/embedded-testing
+            go test -v .
   verify_app_deployment:
     docker:
       - image: circleci/node:12.19.0
@@ -139,3 +167,6 @@ workflows:
       - verify_app_deployment:
           requires:
             - deploy_to_gcp
+      - alternative_testing:
+          requires:
+            - scan_push_docker_image
