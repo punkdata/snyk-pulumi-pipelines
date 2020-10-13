@@ -91,7 +91,7 @@ jobs:
           property_name: appEndpointIp
           env_var: ENDPOINT_URL
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
-  verify_app:
+  verify_app_deployment:
     docker:
       - image: circleci/node:12.19.0
         environment:
@@ -136,6 +136,6 @@ workflows:
       - deploy_to_gcp:
           requires:
             - scan_push_docker_image
-      - verify_app:
+      - verify_app_deployment:
           requires:
             - deploy_to_gcp
