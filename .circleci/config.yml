@@ -117,7 +117,7 @@ jobs:
           name: Install Node and NPM
           command: |
             curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-            sudo apt -y install nodejs npm
+            sudo apt-get install -y nodejs
       - run:
           name: Run Infra Tests
           command: |
