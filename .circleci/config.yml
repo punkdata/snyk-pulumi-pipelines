@@ -215,6 +215,6 @@ workflows:
           type: approval
           requires:
             - verify_app_deployment
-      - approve_destroy:
+      - destroy_k8s:
           requires:
             - approve_destroy
