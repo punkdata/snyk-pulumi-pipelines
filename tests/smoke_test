@@ -5,10 +5,11 @@
 TIME_OUT=300
 TIME_OUT_COUNT=0
 PULUMI_STACK="k8s"
-PULUMI_CWD="pulumi/gcp/gke/"
-SMOKE_IP=$(pulumi stack --stack $PULUMI_STACK --cwd $PULUMI_CWD output app_endpoint_ip)
+PULUMI_CWD="pulumi/gcp/orb-snyk"
+SMOKE_IP=$(pulumi stack --stack $PULUMI_STACK --cwd $PULUMI_CWD output appEndpointIp)
 SMOKE_URL="http://$SMOKE_IP"
 
+sleep 60
 while true
 do
   STATUS=$(curl -s -o /dev/null -w '%{http_code}' $SMOKE_URL)
@@ -19,13 +20,9 @@ do
     smoke_report
     echo "\n\n"
     echo 'Smoke Tests Successfully Completed.'
-    echo 'Terminating the Kubernetes Cluster in 60 second...'
-    sleep 120
-    pulumi destroy --stack $PULUMI_STACK --cwd $PULUMI_CWD --yes
     break
   elif [[ $TIME_OUT_COUNT -gt $TIME_OUT ]]; then
     echo "Process has Timed out! Elapsed Timeout Count.. $TIME_OUT_COUNT"
-    pulumi destroy --stack $PULUMI_STACK --cwd $PULUMI_CWD --yes
     exit 1
   else
     echo "Checking Status on host $SMOKE... $TIME_OUT_COUNT seconds elapsed"

@@ -72,7 +72,7 @@ jobs:
           command: |
             cd ~/
             curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
-            tar -xzvf gcp-cli.tar.gz
+            tar -xzf gcp-cli.tar.gz
             echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
             ./google-cloud-sdk/install.sh  --quiet
             echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
@@ -86,7 +86,12 @@ jobs:
       - pulumi/update:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
-  destroy_infrastructure:
+      - pulumi/stack_output:
+          stack: k8s
+          property_name: appEndpointIp
+          env_var: ENDPOINT_URL
+          working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
+  verify_app:
     docker:
       - image: circleci/node:12.19.0
         environment:
@@ -101,7 +106,7 @@ jobs:
           command: |
             cd ~/
             curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
-            tar -xzvf gcp-cli.tar.gz
+            tar -xzf gcp-cli.tar.gz
             echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
             ./google-cloud-sdk/install.sh  --quiet
             echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
@@ -112,9 +117,16 @@ jobs:
           command: |
             cd ${HOME}/project/pulumi/gcp/orb-snyk
             sudo npm -g install
-      - pulumi/destroy:
+      - pulumi/stack_output:
           stack: k8s
+          property_name: appEndpointIp
+          env_var: ENDPOINT_URL
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
+      - run:
+          name: Test Deployment
+          command: |
+            cd ${HOME}/project
+            ./tests/smoke_test
 workflows:
   build_test_deploy:
     jobs:
@@ -124,6 +136,6 @@ workflows:
       - deploy_to_gcp:
           requires:
             - scan_push_docker_image
-      - destroy_infrastructure:
+      - verify_app:
           requires:
             - deploy_to_gcp
