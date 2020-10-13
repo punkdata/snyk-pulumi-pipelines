@@ -102,6 +102,8 @@ jobs:
           GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
     steps:
       - checkout
+      - pulumi/login:
+          access-token: ${PULUMI_ACCESS_TOKEN}
       - run:
           name: Install dependencies
           command: |
