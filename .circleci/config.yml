@@ -183,6 +183,7 @@ jobs:
             echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
             source $BASH_ENV
             gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            pulumi plugin install resource kubernetes 2.6.3
       - run:
           name: npm dependencies
           command: |
