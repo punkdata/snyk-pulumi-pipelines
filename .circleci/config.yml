@@ -120,6 +120,7 @@ jobs:
           command: |
             curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
             sudo apt-get install -y nodejs
+            curl -o- -L https://yarnpkg.com/install.sh | bash
       - run:
           name: Run Infra Tests
           command: |
