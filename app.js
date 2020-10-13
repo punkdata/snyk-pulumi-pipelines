@@ -19,7 +19,7 @@ app.get('/', function (req, res) {
     res.render("index", {message: content});
 });
 
-var server = app.listen(8080, function () {
+var server = app.listen(5000, function () {
     console.log("Node server is running on port: "+ server.address().port);
 });
 
