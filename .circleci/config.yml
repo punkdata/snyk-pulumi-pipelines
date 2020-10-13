@@ -89,11 +89,6 @@ jobs:
       - pulumi/update:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
-      - pulumi/stack_output:
-          stack: k8s
-          property_name: appEndpointIp
-          env_var: ENDPOINT_URL
-          working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
   alternative_testing:
     docker:
       - image: circleci/golang:1.15.2
@@ -121,6 +116,7 @@ jobs:
             curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
             sudo apt-get install -y nodejs
             curl -o- -L https://yarnpkg.com/install.sh | bash
+            echo 'export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH' >> $BASH_ENV
       - run:
           name: Run Infra Tests
           command: |
