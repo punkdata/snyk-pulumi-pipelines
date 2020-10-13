@@ -36,7 +36,7 @@ func getGoogleBase() integration.ProgramTestOptions {
 			"gcp:project":     "cicd-workshops",
 			"gcp:zone":        "us-east1-d",
 			"gcp:region":      "us-east1",
-			"gcp:credentials": "${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json",
+			"gcp:credentials": "/home/circleci/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json",
 		},
 		ExpectRefreshChanges: true,
 		Quick:                true,
