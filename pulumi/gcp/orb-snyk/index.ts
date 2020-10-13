@@ -89,7 +89,7 @@ const deployment = new k8s.apps.v1.Deployment(appName,
                         {
                             name: appName,
                             image: dockerImage,
-                            ports: [{ name: "port-8080", containerPort: 5000 }],
+                            ports: [{ name: "port-5000", containerPort: 5000 }],
                         },
                     ],
                 },
