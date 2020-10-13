@@ -191,11 +191,6 @@ jobs:
       - pulumi/destroy:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
-      - pulumi/stack_output:
-          stack: k8s
-          property_name: appEndpointIp
-          env_var: ENDPOINT_URL
-          working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
 workflows:
   build_test_deploy:
     jobs:
