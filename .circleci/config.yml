@@ -5,33 +5,37 @@ orbs:
 jobs:
   unit_tests:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - run:
-          name: Install Python Dependencies
+          name: Install npm dependencies
           command: |
-            echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV && source $BASH_ENV
-            pipenv install --skip-lock
+            npm install --save
       - run:
-          name: Run Tests
+          name: Run Unit Tests
           command: |
-            pipenv run pytest
+            ./node_modules/mocha/bin/mocha test/ --reporter mochawesome --reporter-options reportDir=test-results,reportFilename=test-results
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
   scan_app:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - run:
           name: Snyk Scan Application files 
           command: |
             echo "Use snyk Orb here"
+            sudo npm -g install
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
   scan_push_docker_image:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - setup_remote_docker:
@@ -42,8 +46,7 @@ jobs:
             echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV
             echo 'export TAG=${CIRCLE_SHA1}' >> $BASH_ENV
             echo 'export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME' >> $BASH_ENV && source $BASH_ENV
-            pipenv install --skip-lock
-            pipenv run pyinstaller -F hello_world.py
+            sudo npm -g install
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
       - snyk/scan:
           fail-on-issues: false
@@ -59,7 +62,7 @@ jobs:
             docker push $DOCKER_LOGIN/$IMAGE_NAME
   deploy_to_gcp:
     docker:
-      - image: circleci/node:12.19.0
+      - image: circleci/node:12
         environment:
           CLOUDSDK_PYTHON: '/usr/bin/python2.7'
           GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
@@ -154,7 +157,7 @@ jobs:
           name: Test Deployment
           command: |
             cd ${HOME}/project
-            ./tests/smoke_test
+            ./test/smoke_test
 workflows:
   build_test_deploy:
     jobs:
