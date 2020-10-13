@@ -59,7 +59,7 @@ jobs:
             docker push $DOCKER_LOGIN/$IMAGE_NAME
   deploy_to_gcp:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12.19.0
         environment:
           CLOUDSDK_PYTHON: '/usr/bin/python2.7'
           GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
@@ -71,8 +71,6 @@ jobs:
           name: Install dependencies
           command: |
             cd ~/
-            sudo pip install --upgrade six
-            pip install --user -r project/requirements.txt
             curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
             tar -xzvf gcp-cli.tar.gz
             echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
@@ -80,6 +78,11 @@ jobs:
             echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
             source $BASH_ENV
             gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+      - run:
+          name: npm dependencies
+          command: |
+            cd ${HOME}/project/pulumi/gcp/orb-snyk
+            sudo npm -g install
       - pulumi/update:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
