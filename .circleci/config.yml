@@ -200,9 +200,9 @@ workflows:
       - verify_app_deployment:
           requires:
             - deploy_to_gcp
-      - alternative_testing:
-          requires:
-            - deploy_to_gcp
+      # - alternative_testing:
+      #     requires:
+      #       - deploy_to_gcp
       - approve_destroy:
           type: approval
           requires:
