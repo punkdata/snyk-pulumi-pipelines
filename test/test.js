@@ -1,7 +1,7 @@
 var request = require("request"),
     assert = require('assert'),
     helloWorld = require("../app.js"),
-    base_url = "http://localhost:5000/";
+    base_url = "http://localhost:8080/";
 
 describe("Welcome to CI/CD Server", function() {
 
