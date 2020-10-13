@@ -15,7 +15,7 @@ import (
 )
 
 func TestAccAppAndInfra(t *testing.T) {
-	test := getGoogleBase(t).
+	test := getGoogleBase().
 		With(integration.ProgramTestOptions{
 			Dir: filepath.Join(getCwd(t), "..", "pulumi", "gcp", "orb-snyk"),
 			ExtraRuntimeValidation: func(t *testing.T, stack integration.RuntimeValidationStackInfo) {
@@ -30,12 +30,13 @@ func TestAccAppAndInfra(t *testing.T) {
 	integration.ProgramTest(t, &test)
 }
 
-func getGoogleBase(t *testing.T) integration.ProgramTestOptions {
+func getGoogleBase() integration.ProgramTestOptions {
 	gkeBase := integration.ProgramTestOptions{
 		Config: map[string]string{
-			"gcp:project": "cicd-workshops",
-			"gcp:zone":    "us-east1-d",
-			"gcp:region":  "us-east1",
+			"gcp:project":     "cicd-workshops",
+			"gcp:zone":        "us-east1-d",
+			"gcp:region":      "us-east1",
+			"gcp:credentials": "${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json",
 		},
 		ExpectRefreshChanges: true,
 		Quick:                true,
