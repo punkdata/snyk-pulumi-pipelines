@@ -1,10 +1,19 @@
-FROM python:3.7.4
+FROM node:12
 
-RUN mkdir /opt/hello_world/
-WORKDIR /opt/hello_world/
+# Create app directory
+WORKDIR /usr/src/app
 
-COPY dist/hello_world /opt/hello_world/
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+COPY package*.json ./
+
+RUN npm install --only=production
+# If you are building your code for production
+# RUN npm install --only=production
+
+# Bundle app source
+COPY . .
 
 EXPOSE 8080
-
-CMD [ "./hello_world" ]
+CMD [ "npm", "start" ]

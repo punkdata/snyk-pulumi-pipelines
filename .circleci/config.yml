@@ -5,33 +5,37 @@ orbs:
 jobs:
   unit_tests:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - run:
-          name: Install Python Dependencies
+          name: Install npm dependencies
           command: |
-            echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV && source $BASH_ENV
-            pipenv install --skip-lock
+            npm install --save
       - run:
-          name: Run Tests
+          name: Run Unit Tests
           command: |
-            pipenv run pytest
+            ./node_modules/mocha/bin/mocha test/ --reporter mochawesome --reporter-options reportDir=test-results,reportFilename=test-results
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
   scan_app:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - run:
           name: Snyk Scan Application files 
           command: |
             echo "Use snyk Orb here"
+            sudo npm -g install
       - snyk/scan:
           fail-on-issues: false
           monitor-on-build: false
   scan_push_docker_image:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
     steps:
       - checkout
       - setup_remote_docker:
@@ -42,8 +46,7 @@ jobs:
             echo 'export PATH=~$PATH:~/.local/bin' >> $BASH_ENV
             echo 'export TAG=${CIRCLE_SHA1}' >> $BASH_ENV
             echo 'export IMAGE_NAME=$CIRCLE_PROJECT_REPONAME' >> $BASH_ENV && source $BASH_ENV
-            pipenv install --skip-lock
-            pipenv run pyinstaller -F hello_world.py
+            sudo npm -g install
             docker build -t $DOCKER_LOGIN/$IMAGE_NAME -t $DOCKER_LOGIN/$IMAGE_NAME:$TAG .
       - snyk/scan:
           fail-on-issues: false
@@ -59,7 +62,7 @@ jobs:
             docker push $DOCKER_LOGIN/$IMAGE_NAME
   deploy_to_gcp:
     docker:
-      - image: circleci/python:3.7.4
+      - image: circleci/node:12
         environment:
           CLOUDSDK_PYTHON: '/usr/bin/python2.7'
           GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
@@ -71,16 +74,118 @@ jobs:
           name: Install dependencies
           command: |
             cd ~/
-            sudo pip install --upgrade six
-            pip install --user -r project/requirements.txt
             curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
-            tar -xzvf gcp-cli.tar.gz
+            tar -xzf gcp-cli.tar.gz
             echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
             ./google-cloud-sdk/install.sh  --quiet
             echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
             source $BASH_ENV
             gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+      - run:
+          name: npm dependencies
+          command: |
+            cd ${HOME}/project/pulumi/gcp/orb-snyk
+            sudo npm -g install
       - pulumi/update:
+          stack: k8s
+          working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
+  alternative_testing:
+    docker:
+      - image: circleci/golang:1.15.2
+        environment:
+          CLOUDSDK_PYTHON: '/usr/bin/python2.7'
+          GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
+    steps:
+      - checkout
+      - pulumi/login:
+          access-token: ${PULUMI_ACCESS_TOKEN}
+      - run:
+          name: Install dependencies
+          command: |
+            cd ~/
+            curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+            tar -xzf gcp-cli.tar.gz
+            echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            ./google-cloud-sdk/install.sh  --quiet
+            echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
+            source $BASH_ENV
+            gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+      - run:
+          name: Install Node and NPM
+          command: |
+            curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            curl -o- -L https://yarnpkg.com/install.sh | bash
+            echo 'export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH' >> $BASH_ENV
+      - run:
+          name: Run Infra Tests
+          command: |
+            cd ${HOME}/project/embedded-testing
+            go test -v .
+  verify_app_deployment:
+    docker:
+      - image: circleci/node:12.19.0
+        environment:
+          CLOUDSDK_PYTHON: '/usr/bin/python2.7'
+          GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
+    steps:
+      - checkout
+      - pulumi/login:
+          access-token: ${PULUMI_ACCESS_TOKEN}
+      - run:
+          name: Install dependencies
+          command: |
+            cd ~/
+            curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+            tar -xzf gcp-cli.tar.gz
+            echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            ./google-cloud-sdk/install.sh  --quiet
+            echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
+            source $BASH_ENV
+            gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+      - run:
+          name: npm dependencies
+          command: |
+            cd ${HOME}/project/pulumi/gcp/orb-snyk
+            sudo npm -g install
+      - pulumi/stack_output:
+          stack: k8s
+          property_name: appEndpointIp
+          env_var: ENDPOINT_URL
+          working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
+      - run:
+          name: Test Deployment
+          command: |
+            cd ${HOME}/project
+            ./test/smoke_test
+  destroy_k8s:
+    docker:
+      - image: circleci/node:12
+        environment:
+          CLOUDSDK_PYTHON: '/usr/bin/python2.7'
+          GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
+    steps:
+      - checkout
+      - pulumi/login:
+          access-token: ${PULUMI_ACCESS_TOKEN}
+      - run:
+          name: Install dependencies
+          command: |
+            cd ~/
+            curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
+            tar -xzf gcp-cli.tar.gz
+            echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            ./google-cloud-sdk/install.sh  --quiet
+            echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
+            source $BASH_ENV
+            gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
+            pulumi plugin install resource kubernetes 2.6.3
+      - run:
+          name: npm dependencies
+          command: |
+            cd ${HOME}/project/pulumi/gcp/orb-snyk
+            sudo npm -g install
+      - pulumi/destroy:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
 workflows:
@@ -92,3 +197,16 @@ workflows:
       - deploy_to_gcp:
           requires:
             - scan_push_docker_image
+      - verify_app_deployment:
+          requires:
+            - deploy_to_gcp
+      # - alternative_testing:
+      #     requires:
+      #       - deploy_to_gcp
+      - approve_destroy:
+          type: approval
+          requires:
+            - verify_app_deployment
+      - destroy_k8s:
+          requires:
+            - approve_destroy
