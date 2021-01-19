@@ -89,39 +89,6 @@ jobs:
       - pulumi/update:
           stack: k8s
           working_directory: ${HOME}/project/pulumi/gcp/orb-snyk
-  alternative_testing:
-    docker:
-      - image: circleci/golang:1.15.2
-        environment:
-          CLOUDSDK_PYTHON: '/usr/bin/python2.7'
-          GOOGLE_SDK_PATH: '~/google-cloud-sdk/'
-    steps:
-      - checkout
-      - pulumi/login:
-          access-token: ${PULUMI_ACCESS_TOKEN}
-      - run:
-          name: Install dependencies
-          command: |
-            cd ~/
-            curl -o gcp-cli.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/google-cloud-sdk.tar.gz
-            tar -xzf gcp-cli.tar.gz
-            echo ${GOOGLE_CLOUD_KEYS} | base64 --decode --ignore-garbage > ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
-            ./google-cloud-sdk/install.sh  --quiet
-            echo 'export PATH=$PATH:~/google-cloud-sdk/bin:~/.local/bin' >> $BASH_ENV
-            source $BASH_ENV
-            gcloud auth activate-service-account --key-file ${HOME}/project/pulumi/gcp/orb-snyk/cicd_demo_gcp_creds.json
-      - run:
-          name: Install Node and NPM
-          command: |
-            curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            curl -o- -L https://yarnpkg.com/install.sh | bash
-            echo 'export PATH=$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH' >> $BASH_ENV
-      - run:
-          name: Run Infra Tests
-          command: |
-            cd ${HOME}/project/embedded-testing
-            go test -v .
   verify_app_deployment:
     docker:
       - image: circleci/node:12.19.0
@@ -200,10 +167,7 @@ workflows:
       - verify_app_deployment:
           requires:
             - deploy_to_gcp
-      # - alternative_testing:
-      #     requires:
-      #       - deploy_to_gcp
-      - approve_destroy:
+       - approve_destroy:
           type: approval
           requires:
             - verify_app_deployment
