@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. tests/smoke.sh
+. test/smoke.sh
 
 TIME_OUT=300
 TIME_OUT_COUNT=0
