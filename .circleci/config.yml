@@ -167,7 +167,7 @@ workflows:
       - verify_app_deployment:
           requires:
             - deploy_to_gcp
-       - approve_destroy:
+      - approve_destroy:
           type: approval
           requires:
             - verify_app_deployment
